@@ -24,6 +24,35 @@ class TestCluster(object):
             master=mock_master
         )
 
+    def test_to_dict(self):
+        """ Ensure to_dict returns the expected information """
+        mock_slave = Mock(
+            is_slave=True,
+            master_name='a:1',
+            cluster_id=0,
+            timestamp=1000
+        )
+        mock_lost = Mock(
+            is_slave=True,
+            master_name='a:1',
+            cluster_id=0,
+            timestamp=700
+        )
+        self._cluster.add_node(mock_slave)
+        self._cluster.add_node(mock_lost)
+        d = self._cluster.to_dict(reset=True)
+        assert_items_equal(d.keys(), [
+            'cluster_id', 'has_master', 'master', 'slaves', 'lost'
+        ])
+        assert_equals(0, d['cluster_id'])
+        assert_true(d['has_master'])
+        assert_equals(self._cluster.master.to_dict(), d['master'])
+        assert_equals(1, len(d['slaves']))
+        assert_equals(mock_slave.to_dict(), d['slaves'][0])
+        assert_equals(1, len(d['lost']))
+        assert_equals(mock_lost.to_dict(), d['lost'][0])
+
+
     def test_has_master_property(self):
         """Test the has_master property is updated"""
         assert_true(self._cluster.has_master)

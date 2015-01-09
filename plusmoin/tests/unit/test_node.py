@@ -47,6 +47,23 @@ class TestNode(object):
         assert_equals(12345, node.timestamp)
 
     @patch('plusmoin.lib.node.db')
+    def test_to_dict(self, mock_db):
+        """ Test to_dict """
+        mock_db.get_connection.return_value = MockConnection()
+        mock_db.is_slave.return_value = True
+        mock_db.get_info.return_value = (12, 'hello:99', 12345)
+        node = Node('a', 1)
+        node.refresh_role()
+        node.refresh_info()
+        assert_equals(node.to_dict(), {
+            'host': 'a',
+            'port': 1,
+            'master_name': 'hello:99',
+            'cluster_id': 12,
+            'is_slave': True
+        })
+
+    @patch('plusmoin.lib.node.db')
     def test_update_heartbeat(self, mock_db):
         """Ensure update heartbeat invokes the database API """
         mock_db.get_connection.return_value = MockConnection()

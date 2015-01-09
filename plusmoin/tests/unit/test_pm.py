@@ -24,6 +24,14 @@ class MockNode(object):
         if self.fail:
             raise DbError()
 
+    def to_dict(self, reset=False):
+        return {
+            'name': self.name,
+            'master_name': self.master_name,
+            'is_slave': self.is_slave,
+            'cluster_id': self.cluster_id,
+            'timestamp': self.timestamp
+        }
 
 class TestPlusmoin(object):
     def setUp(self):
