@@ -1,5 +1,6 @@
 plusmoin
 ========
+[![Build Status](https://travis-ci.org/NaturalHistoryMuseum/plusmoin.svg?branch=master)](https://travis-ci.org/NaturalHistoryMuseum/plusmoin) [![Coverage Status](https://img.shields.io/coveralls/NaturalHistoryMuseum/plusmoin.svg)](https://coveralls.io/r/NaturalHistoryMuseum/plusmoin)
 
 *plusmoin* is a daemon to help manage clusters of PostgreSQL servers setup in
 master/slave replication.
@@ -95,7 +96,7 @@ The available triggers are:
 
 The JSON object provided to the scripts has the following structure:
 
-```json
+```
 {
   "cluster_id": <int>,
   "trigger": null or <node entry>,
@@ -107,7 +108,7 @@ The JSON object provided to the scripts has the following structure:
 ```          
 
 Where each node entry is of the form:
-```json
+```
 {
   "host": <str>,
   "port": <int>,
@@ -168,9 +169,87 @@ mkdir /var/run/plusmoin
 Configuring *plusmoin*
 ----------------------
 By default *plusmoin* expects it's configuration file in 
-`/etc/plusmoin/plusmoin.json`. This is a json, with comments allowed. Here
+`/etc/plusmoin/plusmoin.json`. This is a json file, with comments allowed. Here
 is an example configuration file detailing all available options:
 
+```
+/**
+ * Plusmoin configuration. This is a JSON files with comments.
+ */
+{
+  // The name of the database used to store the plusmoin heartbeat table.
+  // Must be the same accross all clusters. Required (no default)
+  "dbname": "plusmoin",
+
+  // The username to log on to the database server. Must have write access
+  // to the plusmoin database. Required (no default)
+  "user": "plusmoin",
+
+  // The username to log on to the database server. Must have write access
+  // to the plusmoin database. Required (no default)
+  "password": "nothing",
+
+  // How often Plusmoin wakes up to perform tests and run triggers, in
+  // seconds. Default: 60
+  "heartbeat": 60,
+
+  // The maximum acceptable delay between a master and a slave, in seconds.
+  // If the delay is longer than this, the slave is assumed to be down.
+  // Default: 120
+  "max_sync_delay": 120,
+
+  // The maximum acceptable delay to bring a slave back up, in seconds.
+  // Having this different from "sync_delay" ensures that nodes that are
+  // around the limit won't constantly go up and down. Default: 60
+  "recover_sync_delay": 60,
+
+  // List of nodes to manage. Each entry in the list is a dictionary of the
+  // form: {"host": "example.com", "port": 5432}. Each entry must be unique.
+  // Default: []
+  "nodes": [],
+
+  // List of triggers to run, as a dict of trigger name to shell command.
+  // Triggers can be ommited or set to None. Defaults to {}
+  "triggers": {
+    "plusmoin_up": null,
+    "plusmoin_heartbeat": null,
+    "master_up": null,
+    "master_down": null,
+    "slave_up": null,
+    "slave_down": null
+  },
+
+  // Timeout for trigger commands, in seconds. Defaults to 60.
+  "trigger_timeout": 60,
+
+  // Log file. Defaults to '/var/log/plusmoin/plusmoin.log'. Ensure that the
+  // directory exists and is writeable by the plusmoin daemon user.
+  "log_file": "/var/log/plusmoin/plusmoin.log",
+
+  // Log level, one of 'error', 'info' and 'debug'. Defaults to 'error'
+  "log_level": "error",
+
+  // User the daemon should run as. Defaults to 'nobody'
+  "daemon_user": "nobody",
+
+  // Pid file where the PID is stored. Defaults to
+  // '/var/run/plusmoin/plusmoin.pid'. Ensure that the directory exists and is
+  // writeable by the plusmoin daemon user.
+  "pid_file": "/var/run/plusmoin/plusmoin.pid",
+
+  // File where the running status is stored, as a json objects. Defaults to
+  // '/var/run/plusmoin/status.json'. Ensure that the directory exists and is
+  // writeable by the plusmoin daemon user.
+  "status_file": "/var/run/plusmoin/status.json",
+
+  // Connection timeout for databases, in seconds, Default: 60
+  "connect_timeout": 60,
+
+  // SQL statement which should return TRUE if the node on which it is run is
+  // a slave. Defaults to "SELECT pg_is_in_recovery()"
+  "is_slave_statement": "SELECT pg_is_in_recovery()"
+}
+```
 
 Running *plusmoin*
 ------------------
@@ -190,15 +269,14 @@ Testing *plusmoin*
 
 In addition *plusmoin* has a set of functional tests. Because these rely on
 Docker to run clusters of PostgreSQL servers they cannot be executed on our
-CI server (we currently use Travis-CI) so are run separately as a manual
-process. Note that you must have Docker 1.4 or more recent installed, 
-and you should also install `docker-py`:
+CI server so are run separately as a manual process. Note that you should
+install `docker-py`:
 
 ```
 pip install docker-py
 ```
 
-You must run the tests as root. To run each scenario, symply do:
+You must run the tests as root. To run each scenario, simply do:
 
 ```
 python plusmoin/tests/functional/scenario1.py
