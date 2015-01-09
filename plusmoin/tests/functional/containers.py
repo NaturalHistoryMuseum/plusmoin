@@ -30,10 +30,11 @@ class DockerContainers(object):
                                  }
                           }
         base_url (str): Docker base url
-        version (str): Docker version
+        version (str): Docker API version
  
    """
-    def __init__(self, root, containers, base_url='unix://var/run/docker.sock', version='1.14'):
+    def __init__(self, root, containers,
+                 base_url='unix://var/run/docker.sock', version='1.14'):
         self.root = root
         self.containers = {}
         for c in containers:
@@ -56,14 +57,17 @@ class DockerContainers(object):
         for name in self.containers:
             image = self.containers[name]['image']
             logger.info('Building image {}'.format(image))
-            stream = self.docker.build(path=os.path.join(self.root, image), tag=image)
+            stream = self.docker.build(path=os.path.join(self.root, image),
+                                       tag=image)
             for line in stream:
                 info = json.loads(line)
                 if 'error' in info:
                     logger.error("Failed building image {}".format(image))
                     logger.error("Error: {}".format(info['error']))
                     raise BuildFailure()
-            logger.info('Creating container {} from image {}'.format(name, image))
+            logger.info('Creating container {} from image {}'.format(
+                name, image
+            ))
             result = self.docker.create_container(
                 image=image,
                 detach=True,
@@ -76,13 +80,19 @@ class DockerContainers(object):
             self.containers[name]['container'] = result['Id']
             self.containers[name]['status'] = 'stopped'
                 
-    def start(self):
-        """ Start all the containers"""
+    def start(self, delay=2):
+        """ Start all the containers
+
+        Args:
+            delay (int, optional): Time to wait (in seconds) after building
+                each container. Useful to ensure services are properly
+                started when containers rely on each other.
+        """
         for name in self.containers:
             self.start_container(name)
             # Give time for each server to start, as they may depend on each
             # other.
-            time.sleep(2)
+            time.sleep(delay)
 
     def start_container(self, name):
         """ Start the container
@@ -141,7 +151,9 @@ class DockerContainers(object):
 
         logger = logging.getLogger('containers')
         logger.info('Removing container {}'.format(name))
-        self.docker.remove_container(container=self.containers[name]['container'])
+        self.docker.remove_container(
+            container=self.containers[name]['container']
+        )
         self.containers[name]['status'] = None
 
     def pause(self):

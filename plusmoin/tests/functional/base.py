@@ -42,7 +42,10 @@ class BaseTest(object):
 
     def start_containers(self, containers):
         """ Start the listed containers """
-        self.containers = DockerContainers(os.path.dirname(__file__), containers)
+        self.containers = DockerContainers(
+            os.path.dirname(__file__),
+            containers
+        )
         self.containers.build()
         self.containers.start()
 

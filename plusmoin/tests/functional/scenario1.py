@@ -57,6 +57,7 @@ class TestScenario1(BaseTest):
                 }
             }
         ])
+        time.sleep(10)
         self.start_plusmoin({
             'dbname': 'plusmoin',
             'user': 'plusmoin',
