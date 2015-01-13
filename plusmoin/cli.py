@@ -9,7 +9,7 @@ Usage: plusmoin [options] (start|stop|reload|status)
 Options:
     -h --help       Show this screen.
     --version       Show version.
-    -c CONFIG-FILE  Configuration file [default: /etc/plusmoin/plusmoin.json]
+    -c CONFIG-FILE  Configuration file [default: /etc/plusmoin/config.json]
     -x              Do not daemonize, and output logs to stdout. Useful for
                     testing.
 """
@@ -28,7 +28,7 @@ from daemon.pidfile import TimeoutPIDLockFile
 from plusmoin.pm import run as run_service
 from plusmoin.config import read_config, ConfigRequired, config
 
-VERSION = '0.1'
+from version import __version__
 
 
 def run_start(logger, no_daemon):
@@ -121,10 +121,10 @@ def run_status(logger):
     sys.exit(0)
 
 
-def run(argv):
+def run(argv=None):
     """Setup tools entry point"""
     # Read arguments
-    arguments = docopt.docopt(__doc__, argv=argv, help=True, version=VERSION)
+    arguments = docopt.docopt(__doc__, argv=argv, help=True, version=__version__)
     config_file = arguments['-c']
     no_daemon = arguments['-x']
     command = 'status'
@@ -165,4 +165,4 @@ def run(argv):
         run_start(logger, no_daemon)
 
 if __name__ == '__main__':
-    run(sys.argv)
+    run()

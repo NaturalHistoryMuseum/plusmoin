@@ -1,8 +1,11 @@
 from setuptools import setup, find_packages
 
+with open('plusmoin/version.py') as f:
+    exec(f.read())
+
 setup(
     name='plusmoin',
-    version='0.1',
+    version=__version__,
     description='daemon to help manage clusters of PostgreSQL servers setup in master/slave replication',
     url='http://github.com/NaturalHistoryMuseum/plusmoin',
     author='Alice Heaton',

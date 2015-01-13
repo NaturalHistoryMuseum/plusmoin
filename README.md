@@ -143,6 +143,30 @@ host    plusmoin        plusmoin        10.0.0.1/32        md5
 
 Installing *plusmoin*
 ---------------------
+
+** Docker **
+
+We provide a Docker image for plusmoin. You can get it by doing:
+
+```
+docker pull aliceh75/plusmoin:VERSION
+```
+
+You will need to create your own image that adds the configuration, and any
+triggers you might use. Here is an example Dockerfile you can use to do this:
+
+```
+FROM aliceh75/plusmoin:0.1
+COPY plusmoin.json /etc/plusmoin/plusmoin.json
+COPY slave_up /usr/local/bin/slave_up
+# etc.
+```
+
+Note that by default *plusmoin* is the main process in the container, and it
+will not daemonize, outputing it's log on stdout.
+
+** Manual installation **
+
 *plusmoin* is a python application running on Python 2.7. We recommend
 installing it in a virtual environment:
 
