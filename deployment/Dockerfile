@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y python python-virtualenv git build-esse
 RUN virtualenv /usr/lib/plusmoin                                              \
     && cd /usr/lib/plusmoin                                                   \
     && . /usr/lib/plusmoin/bin/activate                                       \
-    && pip install -e git+https://github.com/NaturalHistoryMuseum/plusmoin.git#egg=plusmoin  \
+    && pip install -e git+https://github.com/NaturalHistoryMuseum/plusmoin.git@v0.1.2#egg=plusmoin  \
     && pip install -r /usr/lib/plusmoin/src/plusmoin/requirements.txt         \
     && mkdir /etc/plusmoin                                                    \
     && mkdir /var/run/plusmoin                                                \
