@@ -1,5 +1,6 @@
 import logging
 import psycopg2
+import traceback
 from contextlib import contextmanager
 from plusmoin.config import config
 
@@ -42,7 +43,7 @@ def get_connection(host, port):
         # Can be no server, wrong credentials, timeout, etc.
         logger = logging.getLogger()
         logger.error("Could not connect to {}:{}: {}".format(
-            host, port, e.pgerror
+            host, port, traceback.format_exc()
         ))
         raise DbError()
     try:
