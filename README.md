@@ -121,10 +121,58 @@ Where each node entry is of the form:
 `trigger` represents the node for which the trigger was run (eg. the 
 slave that went down for a `slave_down` trigger)
 
+*plusmoin* running status
+-------------------------
+
+As well triggers, *plusmoin* allows applications to directly access the status
+of all nodes - allowing developers to create applications that are aware of
+*plusmoin*, rather than using a layer of triggers/scripts in between the two. 
+The status is stored in a JSON file, by default `/var/run/plusmmoin/status.json`.
+
+This contains a JSON object of the form:
+
+```
+  clusters: [
+    {
+      "cluster_id": <int>,
+      "has_master": <bool>,
+      "master": null or <node entry>,
+      "slaves": [<node entry>, ...],
+      "lost": [<node entry>, ...]
+    },
+    ...
+  ],
+  "clusterless": [<node entry>, ...]
+}
+```          
+
+Where each node entry is of the form:
+```
+{
+  "host": <str>,
+  "port": <int>,
+  "cluster_id": <int>,
+  "is_slave": <bool>,
+  "master_name": <str>
+}
+```
+
+The information is updated every heartbeat, so there is no need to query it
+more often than the configured heartbeat. *plusmoin* does not make this
+available to applications on other hosts. To achieve this, simply serve the
+file using a web server of your choice. This can easily be done with a 
+one-liner:
+
+```
+  cd /var/run/plusmoin && python -m SimpleHTTPServer 8000
+```
+
 Preparing your cluster
 ----------------------
-You will, of course, need a cluster of PostgreSQL servers setup in streaming
-replication. Each master will need a custom user and database that is used by 
+You will, of course, need a cluster of PostgreSQL servers, with slave nodes
+replicating from master nodes. *plusmoin* does not mind which replication method
+is used, you will just need to configure it to take into account the expected
+lag. Each master will need a custom user and database that is used by 
 *plusmoin* (see *Understanding plusmoin*). This can be set up as:
 
 ```sql
@@ -144,7 +192,7 @@ host    plusmoin        plusmoin        10.0.0.1/32        md5
 Installing *plusmoin*
 ---------------------
 
-** Docker **
+### Docker
 
 We provide a Docker image for plusmoin. You can get it by doing:
 
@@ -165,7 +213,7 @@ COPY slave_up /usr/local/bin/slave_up
 Note that by default *plusmoin* is the main process in the container, and it
 will not daemonize, outputing it's log on stdout.
 
-** Manual installation **
+### Manual installation
 
 *plusmoin* is a python application running on Python 2.7. We recommend
 installing it in a virtual environment:
@@ -275,15 +323,6 @@ is an example configuration file detailing all available options:
 }
 ```
 
-Running *plusmoin*
-------------------
-
-*plusmoin* stores it's running status in the file defined by `status_file` in
-the configuration (by default, `/var/run/plusmoin/status.json`). This file is
-updated every heartbeat and contains the json object defining the status. To
-avoid depending on implementation however, it is best to use `plusmoin status`
-which returns exactly the same information.
-
 Testing *plusmoin*
 ------------------
 
@@ -306,4 +345,5 @@ You must run the tests as root. To run each scenario, simply do:
 python plusmoin/tests/functional/scenario1.py
 ```
 
-As long as no exception is raised, then the tests passed.
+As long as no exception is raised, then the tests passed (connection errors
+will be shown on stdout, but these are expected and part of the error log).
